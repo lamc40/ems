@@ -91,6 +91,7 @@ ems/
 | Department | app01_department | title 部门名称 |
 | UserInfo | app01_userinfo | name、password、age、account、create_time、gender（choices 1男/2女）、depart（外键→Department，级联删除） |
 | PrettyNum | app01_prettynum | mobile 手机号、price 价格、level（1~4级 choices）、status（已占用/未使用 choices） |
+| Admin | app01_admin | username 用户名、password 密码 |
 
 > choices 字段在模板中通过 `get_xxx_display` 显示中文；手机号用字符串存储（避免整型首位 0 丢失/溢出）。
 

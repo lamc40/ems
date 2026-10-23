@@ -55,3 +55,13 @@ class PrettyNum(models.Model):
         (2, "未使用"),
     )
     status = models.SmallIntegerField(verbose_name="状态", choices=status_choices, default=2)  # 使用状态，默认未使用
+
+
+class Admin(models.Model):
+    """ 管理员表 """
+    username = models.CharField(verbose_name="用户名", max_length=32)   # 管理员用户名
+    password = models.CharField(verbose_name="密码", max_length=64)     # 管理员密码
+
+    def __str__(self):
+        """ admin后台/打印对象时显示用户名 """
+        return self.username
