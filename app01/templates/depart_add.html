@@ -1,0 +1,20 @@
+{% extends 'layout.html' %}
+
+{% block title %}新建部门 - 联通用户管理系统{% endblock %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">新建部门</div>
+        <div class="panel-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>标题</label>
+                    <input type="text" name="title" class="form-control" placeholder="标题" required>
+                </div>
+                <button type="submit" class="btn btn-primary">提交</button>
+                <a href="/depart/list/" class="btn btn-default">返回</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}

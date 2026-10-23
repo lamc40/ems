@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+
+# IDE
+.idea/
+.vscode/
+
+# 环境变量
+.env
+
+# 系统文件
+.DS_Store
+Thumbs.db
