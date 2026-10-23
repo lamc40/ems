@@ -62,21 +62,26 @@ ems/
 │   ├── wsgi.py / asgi.py
 └── app01/                        # 业务应用
     ├── models.py                 # 模型：Department / UserInfo / PrettyNum
-    ├── views.py                  # 视图函数（CRUD + 搜索 + 分页）
-    ├── forms.py                  # ModelForm（校验规则、样式统一处理）
     ├── admin.py
-    ├── utils/
-    │   └── pagination.py         # 通用分页组件
+    ├── apps.py
     ├── migrations/               # 数据库迁移文件
     ├── static/                   # 本地静态资源（bootstrap、jquery）
-    └── templates/                # 模板
-        ├── layout.html           # 父模板（导航栏 + 页面骨架）
-        ├── depart_list.html      # 部门列表（分页）
-        ├── depart_add.html / depart_add2.html / depart_edit.html
-        ├── user_list.html        # 用户列表（分页）
-        ├── user_add.html / user_model_form_add.html
-        ├── pretty_list.html      # 靓号列表（搜索 + 分页）
-        ├── pretty_add.html / pretty_edit.html
+    ├── templates/                # 模板
+    │   ├── layout.html           # 父模板（导航栏 + 页面骨架）
+    │   ├── depart_list.html      # 部门列表（分页）
+    │   ├── depart_add.html / depart_add2.html / depart_edit.html
+    │   ├── user_list.html        # 用户列表（分页）
+    │   ├── user_add.html / user_model_form_add.html
+    │   ├── pretty_list.html      # 靓号列表（搜索 + 分页）
+    │   ├── pretty_add.html / pretty_edit.html
+    ├── utils/                    # 公共组件
+    │   ├── bootstrap.py          # BootStrapModelForm 基类（统一表单样式）
+    │   ├── form.py               # ModelForm 定义（校验规则）
+    │   └── pagination.py         # 通用分页组件
+    └── views/                    # 视图（按业务模块拆分）
+        ├── depart.py             # 部门管理：增删改查
+        ├── user.py               # 用户管理：列表、新建
+        └── pretty.py             # 靓号管理：增删改查、搜索
 ```
 
 ## 数据模型
@@ -155,8 +160,8 @@ python manage.py runserver 8000
 
 ## 学习要点索引
 
-- **ModelForm 统一样式**：`forms.py` 中通过重写 `__init__` 循环给所有字段添加 `form-control` 类和 placeholder
-- **字段级校验钩子**：`clean_mobile` 实现手机号唯一性校验（编辑时用 `exclude(id=self.instance.pk)` 排除自身）
+- **ModelForm 统一样式**：`utils/bootstrap.py` 定义 `BootStrapModelForm` 基类，重写 `__init__` 循环给所有字段添加 `form-control` 类和 placeholder，各表单继承即可
+- **字段级校验钩子**：`utils/form.py` 中 `clean_mobile` 实现手机号唯一性校验（编辑时用 `exclude(id=self.instance.pk)` 排除自身）
 - **choices 字段**：模型定义选项元组，模板用 `get_xxx_display` 渲染中文
 - **模板继承**：所有页面继承 `layout.html`，通过 `{% block %}` 扩展标题/内容/CSS/JS
 - **删除后重排 ID**：原生 SQL + 临时关闭外键检查（`SET FOREIGN_KEY_CHECKS=0`），更新主键及外键引用后重置自增计数器
