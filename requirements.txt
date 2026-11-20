@@ -1,0 +1,7 @@
+# 《企业员工管理系统》依赖清单
+# 安装：pip install -r requirements.txt
+
+Django>=5.2,<6.0
+mysqlclient>=2.2
+Pillow>=10.0
+openpyxl>=3.1

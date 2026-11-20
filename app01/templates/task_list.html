@@ -1,0 +1,232 @@
+{% extends 'layout.html' %}
+{% load perm_tags %}
+{% block content %}
+<div class="container">
+    <!-- 顶部：批量上传 + 新建 -->
+    <div class="panel panel-default" style="margin-bottom:15px;">
+        <div class="panel-heading" style="padding:8px 15px;">
+            <strong>📦 批量导入任务</strong>
+        </div>
+        <div class="panel-body" style="padding:12px 15px;">
+            <div class="row">
+                <div class="col-md-7">
+                    <form id="task_import_form" enctype="multipart/form-data" style="display:inline;">
+                        {% csrf_token %}
+                        <div class="input-group" style="width:100%;">
+                            <input type="file" name="file" id="task_import_file" class="form-control" accept=".xlsx,.xls" style="height:34px; padding:4px;">
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-primary" id="btn_import">
+                                    <span class="glyphicon glyphicon-upload"></span> 上传导入
+                                </button>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5 text-right" style="padding-top:6px;">
+                    <a href="/task/template/" class="btn btn-link btn-sm" style="padding:0;">
+                        <span class="glyphicon glyphicon-download"></span> 下载导入模板
+                    </a>
+                    <span class="text-muted" style="margin-left:10px;">
+                        Excel 列：标题(必填) | 级别(P0~P3) | 详情 | 负责人姓名 | 状态
+                    </span>
+                </div>
+            </div>
+            <div id="import_result" style="margin-top:10px;"></div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom: 15px;">
+        <div class="col-md-4"><h3>任务列表</h3></div>
+        <div class="col-md-8 text-right">
+            <button class="btn btn-success" onclick="toggleForm()">
+                <span class="glyphicon glyphicon-plus"></span> 新建任务（AJAX）
+            </button>
+        </div>
+    </div>
+
+    <!-- AJAX 异步表单（默认隐藏，提交成功不刷新页面） -->
+    <div id="task_form_panel" class="panel panel-success" style="display:none; margin-bottom:20px;">
+        <div class="panel-heading"><h4>新建任务（AJAX 异步提交）</h4></div>
+        <div class="panel-body">
+            <form id="task_form" class="form-horizontal">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">标题<span class="text-danger">*</span></label>
+                    <div class="col-sm-8">
+                        <input type="text" name="title" id="id_title" class="form-control" placeholder="任务标题">
+                        <span class="help-block text-danger" id="err_title"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">级别</label>
+                    <div class="col-sm-8">
+                        <select name="level" id="id_level" class="form-control">
+                            {% for k, v in LEVEL_CHOICES %}<option value="{{ k }}">{{ v }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">负责人</label>
+                    <div class="col-sm-8">
+                        <select name="owner" id="id_owner" class="form-control">
+                            <option value="">不指定</option>
+                            {% for e in employees %}<option value="{{ e.id }}">{{ e.name }}（{{ e.depart|default:"—" }}）</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">详情</label>
+                    <div class="col-sm-8">
+                        <textarea name="detail" id="id_detail" class="form-control" rows="3" placeholder="任务详情（可选）"></textarea>
+                        <span class="help-block text-danger" id="err_detail"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-8">
+                        <button type="button" class="btn btn-success" id="btn_submit">异步提交</button>
+                        <button type="button" class="btn btn-default" onclick="toggleForm()">取消</button>
+                    </div>
+                </div>
+                <div id="task_result" class="alert" style="display:none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 任务列表 -->
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>级别</th><th>标题</th><th>负责人</th>
+                <th>状态</th><th>创建时间</th><th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="task_tbody">
+            {% for t in task_list %}
+            <tr data-id="{{ t.id }}">
+                <td>
+                    {% if t.level == 'P0' %}<span class="label label-danger">P0 紧急</span>
+                    {% elif t.level == 'P1' %}<span class="label label-warning">P1 高</span>
+                    {% elif t.level == 'P2' %}<span class="label label-info">P2 中</span>
+                    {% else %}<span class="label label-default">P3 低</span>{% endif %}
+                </td>
+                <td>{{ t.title }}</td>
+                <td>{{ t.owner.name|default:"—" }}</td>
+                <td>
+                    {% if t.status == 'pending' %}<span class="label label-default">待办</span>
+                    {% elif t.status == 'doing' %}<span class="label label-primary">进行中</span>
+                    {% else %}<span class="label label-success">已完成</span>{% endif %}
+                </td>
+                <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    <button class="btn btn-xs btn-danger" onclick="deleteTask({{ t.id }})">删除</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">暂无任务</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav>{{ page_str }}</nav>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+function toggleForm(){
+    $('#task_form_panel').toggle();
+    $('#task_result').hide();
+    $('.help-block').text('');
+}
+
+// AJAX 异步提交：不刷新页面，校验错误实时回显
+$('#btn_submit').on('click', function(){
+    // 清之前的错误
+    $('.help-block').text('');
+    $('#task_result').hide().removeClass('alert-success alert-danger');
+
+    var formData = $('#task_form').serialize();
+    console.log('AJAX 提交 data:', formData);  // 调试日志
+
+    $.ajax({
+        url: '/task/ajax/submit/',
+        type: 'POST',
+        data: formData,
+        timeout: 5000,
+        success: function(res){
+            console.log('后端返回:', res);
+            if(res.status){
+                $('#task_result').addClass('alert alert-success').text('✓ ' + res.message).show();
+                $('#task_form')[0].reset();
+                setTimeout(function(){ location.reload(); }, 500);
+            } else {
+                if(res.errors){
+                    for(var key in res.errors){
+                        $('#err_'+key).text(res.errors[key]);
+                    }
+                } else {
+                    $('#task_result').addClass('alert alert-danger').text('✗ ' + (res.message || '提交失败')).show();
+                }
+            }
+        },
+        error: function(xhr, status, err){
+            console.log('AJAX error:', status, err);
+            $('#task_result').addClass('alert alert-danger').text('✗ 提交失败：' + (status === 'timeout' ? '请求超时' : '网络错误（' + status + '）')).show();
+        }
+    });
+});
+
+function deleteTask(id){
+    if(!confirm('确认删除该任务？')) return;
+    $.post('/task/ajax/delete/', {id: id, csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()}, function(res){
+        if(res.status){
+            $('tr[data-id="'+id+'"]').fadeOut(300, function(){ $(this).remove(); });
+        }
+    });
+}
+
+// ===== Excel 批量导入 =====
+$('#btn_import').on('click', function(){
+    var fileInput = document.getElementById('task_import_file');
+    if(!fileInput.files.length){
+        $('#import_result').html('<div class="alert alert-warning" style="margin-bottom:0;">请先选择 Excel 文件</div>');
+        return;
+    }
+
+    var formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('csrfmiddlewaretoken', $('[name=csrfmiddlewaretoken]').val());
+
+    var $btn = $(this).prop('disabled', true).html('导入中...');
+    $('#import_result').html('');
+
+    $.ajax({
+        url: '/task/import/',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        timeout: 30000,
+        dataType: 'json',
+        success: function(res){
+            var cls = res.status ? 'alert-success' : 'alert-danger';
+            var html = '<div class="alert ' + cls + '" style="margin-bottom:0;"><strong>' + (res.status ? '✓ ' : '✗ ') + res.message + '</strong>';
+            if(res.errors && res.errors.length){
+                html += '<div style="margin-top:6px; font-size:12px; max-height:150px; overflow:auto;"><ul style="margin:0; padding-left:18px;">';
+                res.errors.forEach(function(e){ html += '<li>' + e + '</li>'; });
+                html += '</ul></div>';
+            }
+            html += '</div>';
+            $('#import_result').html(html);
+            $btn.prop('disabled', false).html('<span class="glyphicon glyphicon-upload"></span> 上传导入');
+            if(res.status){
+                setTimeout(function(){ location.reload(); }, 1500);
+            }
+        },
+        error: function(xhr){
+            $('#import_result').html('<div class="alert alert-danger" style="margin-bottom:0;">✗ 上传失败：HTTP ' + xhr.status + '</div>');
+            $btn.prop('disabled', false).html('<span class="glyphicon glyphicon-upload"></span> 上传导入');
+        }
+    });
+});
+</script>
+{% endblock %}

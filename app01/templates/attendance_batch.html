@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container col-md-6 col-md-offset-3">
+    <h3>批量录入考勤</h3>
+    <form method="post" class="form-horizontal">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="col-sm-3 control-label">日期</label>
+            <div class="col-sm-8"><input type="date" name="date" class="form-control" required></div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">员工</label>
+            <div class="col-sm-8">
+                {% for e in employees %}
+                <label class="checkbox-inline"><input type="checkbox" name="employees" value="{{ e.id }}"> {{ e.name }}</label>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-8">
+                <button type="submit" class="btn btn-primary">创建记录</button>
+                <a href="/attendance/list/" class="btn btn-default">返回</a>
+            </div>
+        </div>
+    </form>
+    <p class="text-muted">提示：批量创建后，请逐条到编辑页填写上下班时间，系统会自动计算考勤状态。</p>
+</div>
+{% endblock %}

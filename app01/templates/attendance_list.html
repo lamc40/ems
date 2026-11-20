@@ -1,0 +1,58 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-bottom: 15px;">
+        <div class="col-md-4">
+            <h3>考勤管理</h3>
+        </div>
+        <div class="col-md-8 text-right">
+            <a href="/attendance/add/" class="btn btn-success">单条录入</a>
+            <a href="/attendance/add/batch/" class="btn btn-info">批量录入</a>
+        </div>
+    </div>
+
+    <form method="get" class="form-inline" style="margin-bottom: 15px;">
+        <input type="text" name="search" class="form-control" placeholder="员工姓名" value="{{ search }}">
+        <input type="date" name="date_from" class="form-control" value="{{ date_from }}"> ~ 
+        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+        <button type="submit" class="btn btn-default">搜索</button>
+        <a href="/attendance/list/" class="btn btn-link">重置</a>
+    </form>
+
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>员工</th><th>日期</th><th>上班时间</th><th>下班时间</th>
+                <th>状态</th><th>备注</th><th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for att in attendance_list %}
+            <tr>
+                <td>{{ att.employee.name }}</td>
+                <td>{{ att.date }}</td>
+                <td>{{ att.morning_time|default:"—" }}</td>
+                <td>{{ att.evening_time|default:"—" }}</td>
+                <td>
+                    {% if att.status == 'normal' %}<span class="label label-success">正常</span>
+                    {% elif att.status == 'late' %}<span class="label label-warning">迟到</span>
+                    {% elif att.status == 'early' %}<span class="label label-warning">早退</span>
+                    {% elif att.status == 'late_early' %}<span class="label label-danger">迟到+早退</span>
+                    {% elif att.status == 'absent' %}<span class="label label-danger">缺勤</span>
+                    {% endif %}
+                </td>
+                <td>{{ att.remark|default:"—" }}</td>
+                <td>
+                    <a href="/attendance/edit/{{ att.id }}/" class="btn btn-xs btn-primary">编辑</a>
+                    <a href="/attendance/delete/{{ att.id }}/" class="btn btn-xs btn-danger" onclick="return confirm('确认删除？')">删除</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted">暂无数据</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav>{{ page_str }}</nav>
+</div>
+{% endblock %}

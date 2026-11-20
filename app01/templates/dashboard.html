@@ -1,0 +1,81 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+    <div class="row" style="margin-bottom: 20px;">
+        <div class="col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading"><h4>部门总数</h4></div>
+                <div class="panel-body text-center" style="font-size:32px;">{{ dept_count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-success">
+                <div class="panel-heading"><h4>员工总数</h4></div>
+                <div class="panel-body text-center" style="font-size:32px;">{{ emp_count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-warning">
+                <div class="panel-heading"><h4>公告总数</h4></div>
+                <div class="panel-body text-center" style="font-size:32px;">{{ notice_count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-danger">
+                <div class="panel-heading"><h4>薪资总额</h4></div>
+                <div class="panel-body text-center" style="font-size:28px;">¥{{ salary_total }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-heading"><h4>部门人数分布</h4></div>
+                <div class="panel-body"><div id="deptChart" style="height:300px;"></div></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-heading"><h4>各月薪资趋势</h4></div>
+                <div class="panel-body"><div id="salaryChart" style="height:300px;"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="/static/plugins/echarts/echarts.min.js"></script>
+<script>
+$(function(){
+    // 部门人数饼图
+    $.get('/api/dashboard/department_stats/', function(res){
+        if(res.status){
+            echarts.init(document.getElementById('deptChart')).setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie', radius: '60%',
+                    data: res.data,
+                    label: { formatter: '{b}: {c}人' }
+                }]
+            });
+        }
+    });
+    // 薪资趋势折线图
+    $.get('/api/dashboard/salary_trend/', function(res){
+        if(res.status){
+            echarts.init(document.getElementById('salaryChart')).setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: res.data.months },
+                yAxis: { type: 'value', name: '总额(元)' },
+                series: [{
+                    type: 'line', smooth: true, data: res.data.totals,
+                    areaStyle: {}, itemStyle: { color: '#337ab7' }
+                }]
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

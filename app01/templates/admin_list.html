@@ -1,0 +1,63 @@
+{% extends 'layout.html' %}
+
+{% block title %}管理员管理 - 联通用户管理系统{% endblock %}
+
+{% block content %}
+    <div class="clearfix" style="margin-bottom: 10px;">
+        <!-- 左侧：新建管理员按钮 -->
+        <div class="pull-left">
+            <a href="/admin/add/" class="btn btn-success">
+                <span class="glyphicon glyphicon-plus"></span> 新建管理员
+            </a>
+        </div>
+        <!-- 右侧：用户名搜索框 -->
+        <div class="pull-right">
+            <form method="get" class="form-inline" style="display: flex;">
+                <input type="text" name="search" class="form-control" placeholder="关键字" value="{{ search }}">
+                <button type="submit" class="btn btn-default">
+                    <span class="glyphicon glyphicon-search"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <span class="glyphicon glyphicon-th-list"></span> 管理员列表
+        </div>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+              <th>ID</th>
+                <th>用户名</th>
+                <th>角色</th>
+                <th>部门</th>
+                <th>手机号</th>
+                <th>最后登录</th>
+                <th>重置密码</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for admin in admin_list %}
+            <tr>
+                <td>{{ admin.id }}</td>
+                <td>{{ admin.username }}</td>
+                <td>{% if admin.role %}<span class="label label-info">{{ admin.role }}</span>{% else %}—{% endif %}</td>
+                <td>{% if admin.depart %}<span class="label label-success">{{ admin.depart }}</span>{% else %}—{% endif %}</td>
+                <td>{{ admin.phone|default:"—" }}</td>
+                <td>{{ admin.last_login|date:"Y-m-d H:i"|default:"—" }}</td>
+                <td>
+                    <a href="/admin/reset/{{ admin.id }}/" class="btn btn-warning btn-xs">重置密码</a>
+                </td>
+                <td>
+                    <a href="/admin/edit/{{ admin.id }}/" class="btn btn-primary btn-xs">编辑</a>
+                    <a href="/admin/delete/{{ admin.id }}/" class="btn btn-danger btn-xs">删除</a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- 分页条 -->
+    {{ page_str }}
+{% endblock %}

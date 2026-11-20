@@ -2,49 +2,230 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}联通用户管理系统{% endblock %}</title>
-    <!-- Bootstrap 3 样式（CDN） -->
-    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <title>{% block title %}企业员工管理系统{% endblock %}</title>
+    <link href="/static/plugins/bootstrap-3.4.1/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .navbar { margin-bottom: 0; }
+        .nav .active > a { background-color: #eee; }
     </style>
-    {% block css %}{% endblock %}    {# 子页面可扩展自定义样式 #}
+    {% block css %}{% endblock %}
 </head>
 <body>
+{% load perm_tags %}
 <!-- 顶部导航栏 -->
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-inverse">
     <div class="container-fluid">
-        <!-- 左侧：系统名称 -->
         <div class="navbar-header">
-            <a class="navbar-brand" href="/depart/list/">联通用户管理系统</a>
+            <a class="navbar-brand" href="/dashboard/">EMS 员工管理系统</a>
         </div>
+        {% if request.user.is_authenticated %}
         <div class="collapse navbar-collapse">
-            <!-- 中间：模块菜单 -->
+            <!-- 模块菜单：按权限隐藏 -->
             <ul class="nav navbar-nav">
-                <li class="active"><a href="/depart/list/">部门管理</a></li>
-                <li><a href="/user/list/">用户管理</a></li>
-                <li><a href="/pretty/list/">靓号管理</a></li>
-                <li><a href="#">Link</a></li>
-            </ul>
-            <!-- 右侧：登录与用户下拉菜单 -->
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="#">登录</a></li>
+                {% if request.user|has_perm:"dashboard.view" %}
+                <li><a href="/dashboard/"><span class="glyphicon glyphicon-signal"></span> 数据统计</a></li>
+                {% endif %}
+
+                {% if request.user|has_perm:"depart.view" %}
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">郭栋梁 <span class="caret"></span></a>
+                    <a href="/depart/list/" class="dropdown-toggle" data-toggle="dropdown">
+                        <span class="glyphicon glyphicon-briefcase"></span> 部门/员工 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% if request.user|has_perm:"depart.view" %}<li><a href="/depart/list/">部门管理</a></li>{% endif %}
+                        {% if request.user|has_perm:"user.view" %}<li><a href="/user/list/">员工管理</a></li>{% endif %}
+                    </ul>
+                </li>
+                {% endif %}
+
+                {% if request.user|has_perm:"attendance.view" %}
+                <li><a href="/attendance/list/"><span class="glyphicon glyphicon-time"></span> 考勤</a></li>
+                {% endif %}
+
+                {% if request.user|has_perm:"salary.view" %}
+                <li><a href="/salary/list/"><span class="glyphicon glyphicon-yen"></span> 薪资</a></li>
+                {% endif %}
+
+                {% if request.user|has_perm:"notice.view" %}
+                <li><a href="/notice/list/"><span class="glyphicon glyphicon-bullhorn"></span> 公告</a></li>
+                {% endif %}
+
+                {% if request.user|has_perm:"user.view" %}
+                <li><a href="/task/list/"><span class="glyphicon glyphicon-tasks"></span> 任务</a></li>
+                {% endif %}
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <span class="glyphicon glyphicon-cog"></span> 功能管理 <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/order/list/">订单管理</a></li>
+                        <li><a href="/chart/list/">ECharts 统计</a></li>
+                        <li><a href="/upload/form/">Form 上传</a></li>
+                        <li><a href="/upload/modal/form/">ModelForm 上传</a></li>
+                        <li><a href="/city/list/">城市列表（文件）</a></li>
+                        <li><a href="/upload/list/">原始上传示例</a></li>
+                    </ul>
+                </li>
+
+                <li><a href="/ai/"><span class="glyphicon glyphicon-comment"></span> AI 助手</a></li>
+
+                {% if request.user|has_perm:"admin.view" %}
+                <li><a href="/admin/list/"><span class="glyphicon glyphicon-user"></span> 用户/角色</a></li>
+                {% endif %}
+            </ul>
+
+            <!-- 右侧：当前用户下拉 -->
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        {{ request.user.username }}
+                        {% if request.user.role %}<span class="label label-info">{{ request.user.role }}</span>{% endif %}
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% if admin_all|length > 1 %}
+                            {% for item in admin_all %}
+                                {% if item.id == request.user.id %}
+                                    <li class="disabled"><a href="#">{{ item.username }}（当前）</a></li>
+                                {% else %}
+                                    <li><a href="/admin/switch/{{ item.id }}/">切换到 {{ item.username }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            <li class="divider"></li>
+                        {% endif %}
+                        <li><a href="/logout/"><span class="glyphicon glyphicon-off"></span> 退出登录</a></li>
+                    </ul>
                 </li>
             </ul>
         </div>
+        {% endif %}
     </div>
 </nav>
 
-<!-- 主内容区：子页面通过 block content 填充 -->
 <div class="container" style="margin-top: 20px;">
     {% block content %}{% endblock %}
 </div>
 
-<!-- jQuery + Bootstrap JS（dropdown等组件依赖jQuery） -->
-<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
-{% block js %}{% endblock %}    {# 子页面可扩展自定义脚本 #}
+<script src="/static/js/jquery-3.6.0.min.js"></script>
+<script src="/static/plugins/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+{% block js %}{% endblock %}
+
+<!-- ========== 悬浮 AI 助手入口 ========== -->
+<style>
+#aiFloatBtn {
+    position: fixed; right: 24px; bottom: 24px; z-index: 9999;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff; font-size: 18px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 16px rgba(102,126,234,.5);
+    transition: transform .2s;
+}
+#aiFloatBtn:hover { transform: scale(1.1); }
+#aiChatPanel {
+    position: fixed; right: 24px; bottom: 92px; z-index: 9998;
+    width: 380px; height: 480px; background: #fff;
+    border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    display: none; flex-direction: column; overflow: hidden;
+}
+#aiChatPanel.active { display: flex; }
+#aiChatHeader {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff; padding: 12px 16px; display: flex;
+    align-items: center; justify-content: space-between;
+}
+#aiChatHeader b { font-size: 14px; }
+#aiChatHeader button {
+    background: transparent; border: none; color: #fff; cursor: pointer; font-size: 16px;
+}
+#aiChatBody { flex: 1; overflow-y: auto; padding: 12px; background: #f7f8fa; }
+.ai-msg { margin-bottom: 10px; }
+.ai-msg.user { text-align: right; }
+.ai-msg.user span { background: #337ab7; color: #fff; display: inline-block;
+    padding: 6px 12px; border-radius: 12px 12px 2px 12px; max-width: 80%; }
+.ai-msg.ai span { background: #fff; border: 1px solid #e0e0e0; display: inline-block;
+    padding: 6px 12px; border-radius: 12px 12px 12px 2px; max-width: 80%; text-align: left; }
+.ai-loading { color: #888; font-style: italic; }
+#aiChatInput {
+    padding: 10px; border-top: 1px solid #eee; display: flex; gap: 8px;
+}
+#aiChatInput input {
+    flex: 1; padding: 8px 12px; border: 1px solid #ddd;
+    border-radius: 20px; outline: none;
+}
+#aiChatInput input:focus { border-color: #667eea; }
+#aiChatInput button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff; border: none; border-radius: 20px;
+    padding: 8px 18px; cursor: pointer;
+}
+</style>
+
+{% if request.user.is_authenticated %}
+<div id="aiFloatBtn" title="AI 智能助手">🤖</div>
+<div id="aiChatPanel">
+    <div id="aiChatHeader">
+        <b>🤖 AI 智能助手</b>
+        <div>
+            <a href="/ai/" target="_blank" style="color:#fff;font-size:12px;margin-right:8px;text-decoration:none;">独立页</a>
+            <button onclick="$('#aiChatPanel').removeClass('active')">×</button>
+        </div>
+    </div>
+    <div id="aiChatBody"></div>
+    <div id="aiChatInput">
+        <input type="text" id="aiInput" placeholder="问问考勤、薪资、请假..." />
+        <button id="aiSendBtn">发送</button>
+    </div>
+</div>
+
+<script>
+$(function(){
+    var floatHistory = [];   // 悬浮按钮独立对话历史
+
+    $("#aiFloatBtn").click(function(){
+        $("#aiChatPanel").toggleClass('active');
+        if ($("#aiChatBody").is(":empty")) {
+            $("#aiChatBody").html('<div class="ai-msg ai"><span>你好！我是 HR 智能助手，可以问我考勤、薪资、请假、报销等问题 😊</span></div>');
+        }
+    });
+
+    function appendMsg(role, text) {
+        var cls = role === 'user' ? 'user' : 'ai';
+        $("#aiChatBody").append('<div class="ai-msg '+cls+'"><span>'+text+'</span></div>');
+        $("#aiChatBody").scrollTop($("#aiChatBody")[0].scrollHeight);
+    }
+
+    function sendFloatChat() {
+        var q = $("#aiInput").val().trim();
+        if (!q) return;
+        $("#aiInput").val('');
+        appendMsg('user', q);
+        floatHistory.push({role:'user', content: q});
+        appendMsg('ai', '<span class="ai-loading">AI 思考中...</span>');
+
+        $.post('/ai/chat/', {
+            question: q,
+            history: JSON.stringify(floatHistory.slice(0,-1))
+        }, function(res){
+            // 把 loading 替换成真实回复
+            $("#aiChatBody").find('.ai-loading').closest('.ai-msg').remove();
+            if (res.status) {
+                appendMsg('ai', res.data);
+                floatHistory.push({role:'assistant', content: res.data});
+            } else {
+                appendMsg('ai', '❌ ' + res.error);
+            }
+        }).fail(function(){
+            $("#aiChatBody").find('.ai-loading').closest('.ai-msg').remove();
+            appendMsg('ai', '❌ 请求失败');
+        });
+    }
+
+    $("#aiSendBtn").click(sendFloatChat);
+    $("#aiInput").keypress(function(e){ if(e.which===13) sendFloatChat(); });
+});
+</script>
+{% endif %}
 </body>
 </html>

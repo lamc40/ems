@@ -3,6 +3,22 @@
 {% block title %}部门管理 - 联通用户管理系统{% endblock %}
 
 {% block content %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <span class="glyphicon glyphicon-upload"></span> 批量上传部门
+        </div>
+        <div class="panel-body">
+            <form method="post" enctype="multipart/form-data" action="/depart/multi/">
+                {% csrf_token %}
+                <div class="form-group" style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" name="exc" class="btn btn-default">
+                    <input type="submit" value="上传导入" class="btn btn-info btn-sm">
+                    <span style="color: #999; font-size: 12px;">（Excel 第一列为部门名，从第 2 行开始）</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div style="margin-bottom: 10px;">
         <a href="/depart/add/" class="btn btn-primary">
             <span class="glyphicon glyphicon-plus"></span> 新增部门

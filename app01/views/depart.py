@@ -7,12 +7,12 @@ from app01.utils.pagination import Pagination
 
 
 def depart_list(request):
-    """ 部门列表：分页查询部门并渲染到模板 """
-    queryset = Department.objects.all().order_by('id')   # 按ID排序，保证分页数据稳定
-    page_object = Pagination(request, queryset)          # 分页处理（默认每页10条）
+    """ 部门列表：分页查询部门并渲染到模板（select_related 优化 manager 外键） """
+    queryset = Department.objects.select_related('manager').all().order_by('id')
+    page_object = Pagination(request, queryset)
     return render(request, 'depart_list.html', {
-        'depart_list': page_object.page_queryset,        # 当前页的数据
-        'page_str': page_object.html(),                  # 分页条HTML
+        'depart_list': page_object.page_queryset,
+        'page_str': page_object.html(),
     })
 
 
@@ -43,6 +43,28 @@ def depart_edit(request, nid):
         depart.save()                                # 已有对象save即UPDATE
         return redirect('/depart/list/')
     return render(request, 'depart_edit.html', {'depart': depart})
+
+
+def depart_multi(request):
+    """ 批量导入部门（Excel 文件）"""
+    from openpyxl import load_workbook
+
+    file_object = request.FILES.get("exc")
+    if not file_object:
+        return redirect('/depart/list/')
+
+    wb = load_workbook(file_object)
+    sheet = wb.worksheets[0]
+
+    for row in sheet.iter_rows(min_row=2):
+        text = row[0].value
+        if not text:
+            continue
+        exists = Department.objects.filter(title=text).exists()
+        if not exists:
+            Department.objects.create(title=text)
+
+    return redirect('/depart/list/')
 
 
 def depart_delete(request, nid):
