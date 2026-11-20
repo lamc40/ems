@@ -19,7 +19,7 @@ class OrderModelForm(BootStrapModelForm):
 
 
 def order_list(request):
-    queryset = models.Order.objects.all().order_by('-id')
+    queryset = models.Order.objects.all().order_by('id')
     page_object = Pagination(request, queryset)
     form = OrderModelForm()
 

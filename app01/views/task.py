@@ -11,7 +11,7 @@ from app01.utils.pagination import Pagination
 
 def task_list(request):
     """ 任务列表 + AJAX 异步表单页面 """
-    queryset = Task.objects.select_related('owner').all()
+    queryset = Task.objects.select_related('owner').all().order_by('level')
     page_object = Pagination(request, queryset, page_size=3)
     employees = UserInfo.objects.all()
     return render(request, 'task_list.html', {
